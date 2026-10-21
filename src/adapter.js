@@ -40,7 +40,7 @@ export async function submitResponse(value,id){
 export function subscribeResults(onData,onError){
  let stopped=false,timer;
  if(!isConnected){const emit=()=>onData(localResults());emit();window.addEventListener('rtg:responses',emit);window.addEventListener('storage',emit);return()=>{window.removeEventListener('rtg:responses',emit);window.removeEventListener('storage',emit)}}
- const read=async()=>{try{const response=await fetch('/api/owner-results',{credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('Không đọc được tổng kết của nhóm');const data=await response.json();if(!stopped)onData(data.records)}catch(error){if(!stopped)onError(error)}finally{if(!stopped)timer=setTimeout(read,15000)}};
+ const read=async()=>{try{const response=await fetch('/api/owner-results',{credentials:'same-origin',cache:'no-store'});const data=await response.json();if(!response.ok)throw new Error(data.error||'Không đọc được tổng kết của nhóm');if(!stopped)onData(data.records)}catch(error){if(!stopped)onError(error)}finally{if(!stopped)timer=setTimeout(read,15000)}};
  read();return()=>{stopped=true;clearTimeout(timer)};
 }
 

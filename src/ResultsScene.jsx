@@ -10,7 +10,7 @@ function csvCell(value){let text=String(value??'');if(/^[=+@\-\t\r]/.test(text))
 export function csvResults(records){return '\uFEFF'+[['Tên','Điểm đến','Phương tiện','Ngân sách','Lịch tham gia','Lời nhắn','Thời gian gửi'],...records.map(r=>[r.name,destinationNames[r.destination],transportNames[r.transport],budgetNames[r.budget],travelDates(r),r.note||'',r.createdAt||'Đang đồng bộ'])].map(row=>row.map(csvCell).join(',')).join('\r\n')}
 export default function ResultsScene(){
  const [records,setRecords]=useState([]),[loading,setLoading]=useState(true),[error,setError]=useState(''),[page,setPage]=useState(0),[filter,setFilter]=useState('all'),[retry,setRetry]=useState(0);
- useEffect(()=>{setLoading(true);setError('');return subscribeResults(rows=>{setRecords(rows);setLoading(false)},()=>{setError('Chưa đọc được Firestore. Kiểm tra kết nối và rules rồi thử lại.');setLoading(false)})},[retry]);
+ useEffect(()=>{setLoading(true);setError('');return subscribeResults(rows=>{setRecords(rows);setLoading(false)},error=>{setError(error.message||'Chưa đọc được Firestore. Kiểm tra kết nối rồi thử lại.');setLoading(false)})},[retry]);
  const [pageSize,setPageSize]=useState(()=>innerWidth<701?2:4);
  useEffect(()=>{const resize=()=>setPageSize(innerWidth<701?2:4);addEventListener('resize',resize);return()=>removeEventListener('resize',resize)},[]);
  const filtered=records.filter(r=>filter==='all'||r.destination===filter),pages=Math.max(1,Math.ceil(filtered.length/pageSize));
