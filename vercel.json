@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/tong-ket",
+      "destination": "/index.html"
+    }
+  ]
+}

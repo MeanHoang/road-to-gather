@@ -63,4 +63,13 @@ Khi đưa lên môi trường thật cần App Check/enforcement hoặc endpoint
 
 ## Trang tổng kết không cần đăng nhập
 
-Mở `/tong-ket` để xem thống kê, danh sách câu trả lời và xuất CSV ngay, không cần khóa hoặc cookie phiên. Khi có Firebase config, API `/api/owner-results` đọc Firestore bằng service account trên server (`RTG_SERVICE_ACCOUNT_PATH`); khóa bí mật không đưa xuống frontend. Ai truy cập trang tổng kết cũng xem được danh sách và lời nhắn qua CSV. Firestore vẫn chặn đọc trực tiếp từ client. API này hiện chạy trong Vite dev server.
+Mở `/tong-ket` để xem thống kê, danh sách câu trả lời và xuất CSV ngay, không cần khóa hoặc cookie phiên. Khi có Firebase config, API `/api/owner-results` đọc Firestore bằng service account trên server (`RTG_SERVICE_ACCOUNT_PATH`); khóa bí mật không đưa xuống frontend. Ai truy cập trang tổng kết cũng xem được danh sách và lời nhắn qua CSV. Firestore vẫn chặn đọc trực tiếp từ client. API dùng chung cho Vite dev server và Vercel Function tại `api/owner-results.js`.
+
+
+## Vercel
+
+Firebase Web config công khai có sẵn trong `src/firebase-config.js`, nên clone/build vẫn gửi được lên đúng project. Có thể ghi đè bằng bốn biến `VITE_FIREBASE_*` trong `.env.example`; thay đổi biến cần redeploy.
+
+Để `/tong-ket` đọc dữ liệu trên Vercel: vào Project → Settings → Environment Variables, tạo **`RTG_SERVICE_ACCOUNT_JSON`** với Value là toàn bộ nội dung JSON service account, chọn Production rồi redeploy. Đây là biến server-only, tuyệt đối không thêm tiền tố `VITE_` và không commit file JSON. Đường dẫn local `RTG_SERVICE_ACCOUNT_PATH` không tồn tại trên Vercel.
+
+`vercel.json` phục vụ route `/tong-ket` qua ứng dụng React; `/api/owner-results` chạy Vercel Function riêng. Trang tổng kết không yêu cầu đăng nhập theo lựa chọn của chủ nhóm.

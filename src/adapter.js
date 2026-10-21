@@ -1,5 +1,6 @@
+import {firebaseConfig} from './firebase-config.js';
 const env = import.meta.env || {};
-const config = {apiKey:env.VITE_FIREBASE_API_KEY,authDomain:env.VITE_FIREBASE_AUTH_DOMAIN,projectId:env.VITE_FIREBASE_PROJECT_ID,appId:env.VITE_FIREBASE_APP_ID};
+const config = {apiKey:env.VITE_FIREBASE_API_KEY||firebaseConfig.apiKey,authDomain:env.VITE_FIREBASE_AUTH_DOMAIN||firebaseConfig.authDomain,projectId:env.VITE_FIREBASE_PROJECT_ID||firebaseConfig.projectId,appId:env.VITE_FIREBASE_APP_ID||firebaseConfig.appId};
 export const isConnected=Object.values(config).every(Boolean);
 export const DRAFT_KEY='rtg-quiz-v1';
 export const RESPONSES_KEY='rtg-responses-v2';

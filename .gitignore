@@ -8,3 +8,5 @@ test-results/
 !.env.example
 *firebase-adminsdk*.json
 *service-account*.json
+
+.vercel/

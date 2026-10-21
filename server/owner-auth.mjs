@@ -9,11 +9,10 @@ const decode=value=>{
  if(value.mapValue!==undefined)return Object.fromEntries(Object.entries(value.mapValue.fields||{}).map(([k,v])=>[k,decode(v)]));
  return null;
 };
-export function ownerAuthPlugin(env){
+export function createResultsHandler(env=process.env){
  let cachedToken=null,tokenUntil=0;
  const bearer=async()=>{if(!cachedToken||Date.now()>tokenUntil){cachedToken=await accessToken(env.RTG_SERVICE_ACCOUNT_PATH);tokenUntil=Date.now()+3000000}return cachedToken};
- return {name:'road-to-gather-results',configureServer(server){
- server.middlewares.use(async(req,res,next)=>{
+ return async(req,res,next=()=>{})=>{
   const pathname=new URL(req.url,'http://local').pathname;
   if(pathname!=='/api/owner-results')return next();
   const send=(status,payload)=>{res.statusCode=status;res.setHeader('Content-Type','application/json');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(payload))};
@@ -29,6 +28,6 @@ export function ownerAuthPlugin(env){
     return send(200,{records});
    }catch{return send(502,{error:'Chưa đọc được dữ liệu Firestore. Thử lại sau.'})}
   }
- });
- }};
+ };
 }
+export function ownerAuthPlugin(env){return {name:'road-to-gather-results',configureServer(server){server.middlewares.use(createResultsHandler(env))}}}
