@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+ match /databases/{database}/documents {
+  match /tripResponses/{id} {
+   allow read: if false;
+   allow update, delete: if false;
+   allow create: if id.matches('^[a-f0-9-]{36}$')
+    && request.resource.data.keys().hasAll(['name','destination','budget','transport','startDate','endDate','note','consent','createdAt','version'])
+    && request.resource.data.keys().hasOnly(['name','destination','budget','transport','startDate','endDate','note','consent','createdAt','version'])
+    && request.resource.data.destination in ['hagiang','danang','either']
+    && request.resource.data.budget in ['under2','2to25','25to3','flexible']
+    && request.resource.data.transport in ['coach','motorbike','flexible']
+    && request.resource.data.startDate is string && request.resource.data.endDate is string
+    && request.resource.data.startDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+    && request.resource.data.endDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+    && request.resource.data.endDate >= request.resource.data.startDate
+    && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 80
+    && request.resource.data.note is string && request.resource.data.note.size() <= 500
+    && request.resource.data.consent == true
+    && request.resource.data.version == 3
+    && request.resource.data.createdAt == request.time;
+  }
+  match /{document=**} { allow read, write: if false; }
+ }
+}

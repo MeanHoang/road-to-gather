@@ -1,0 +1,40 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+const browser=await chromium.launch({channel:'chrome',headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://localhost:5173/');
+const scene=i=>page.locator('.scene-dots button').nth(i-1).click();
+assert.equal(await page.locator('.scene-dots button').count(),8);
+assert.equal(await page.getByRole('link',{name:'Tổng kết',exact:true}).count(),0);
+await scene(5);await page.locator('.scene-active .segmented').getByRole('button',{name:'Đà Nẵng',exact:true}).click();
+await page.getByRole('tab',{name:/Ngày 2/}).click();
+assert.equal(await page.locator('.compact-timeline li').count(),11);
+await page.getByRole('button',{name:/Tiết kiệm · 2,6tr/}).click();
+await page.getByRole('tab',{name:/Ngày 2/}).click();
+await page.getByRole('button',{name:'09:15–10:30 · Cầu Vàng',exact:true}).click();
+await page.locator('.inline-stop-detail').waitFor();
+assert.match(await page.locator('.inline-stop-detail').innerText(),/Đến đây làm gì/);
+assert.match(await page.locator('.inline-stop-detail').innerText(),/1 triệu/);
+assert.equal(await page.locator('dialog').count(),0);
+assert.equal(await page.getByRole('button',{name:'Các giờ tiếp theo',exact:true}).count(),0);
+await scene(6);assert.match(await page.locator('.receipt-total').innerText(),/3.625.000/);
+await page.getByRole('button',{name:/Đang xem Cầu Vàng/}).click();assert.match(await page.locator('.receipt-total').innerText(),/2.600.000/);
+await scene(8);await page.getByRole('button',{name:'Tiếp theo',exact:true}).click();await page.getByRole('alert').waitFor();
+await page.getByRole('radio',{name:/Xuống biển/}).click();await page.getByRole('button',{name:'Tiếp theo',exact:true}).click();
+await page.getByRole('radio',{name:/2,5 – 3 triệu/}).click();await page.getByRole('button',{name:'Tiếp theo',exact:true}).click();
+await page.getByRole('radio',{name:/Xe khách Ưu tiên/}).click();await page.getByRole('button',{name:'Tiếp theo',exact:true}).click();
+await page.getByLabel('Ngày bắt đầu',{exact:true}).fill('2027-01-01');await page.getByLabel('Ngày kết thúc',{exact:true}).fill('2027-01-03');await page.getByRole('button',{name:'Tiếp theo',exact:true}).click();
+assert.equal(await page.getByRole('textbox',{name:/Email/}).count(),0);
+await page.getByRole('button',{name:'Gửi lựa chọn',exact:true}).click();await page.getByRole('alert').getByText('Tên cần có từ 1 đến 80 ký tự.').waitFor();
+await page.getByRole('textbox',{name:'Tên của bạn',exact:true}).fill('Bản nháp kiểm thử');
+await page.reload();assert.equal(await page.getByRole('radio',{name:/Xuống biển/}).getAttribute('aria-checked'),'true');
+const draft=await page.evaluate(()=>JSON.parse(localStorage.getItem('rtg-quiz-v1')));assert.equal(draft.name,'Bản nháp kiểm thử');assert.equal(draft.budget,'25to3');assert.equal(draft.transport,'coach');assert.equal(draft.contact,undefined);
+for(const [width,height] of [[1440,900],[768,1024],[390,844],[360,640]]){
+ await page.setViewportSize({width,height});
+ for(let i=1;i<=8;i++){await scene(i);assert.equal(await page.locator('.scene-active').evaluate(el=>el.scrollWidth>el.clientWidth),false)}
+ assert.equal(await page.evaluate(()=>scrollY),0);
+}
+await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Mở menu',exact:true}).click();await page.getByRole('navigation',{name:'Điều hướng chính'}).getByRole('link',{name:'Chi phí',exact:true}).click();assert.equal(await page.locator('.scene-active').getAttribute('data-scene'),'budget');
+assert.deepEqual(errors,[]);console.log('PASS: no public results scene; detailed all-day timeline without modal/pagination; budget/Cầu Vàng variants; 5-step name-only quiz, validation, draft persistence, mobile menu and 4 widths.');
+await browser.close();
