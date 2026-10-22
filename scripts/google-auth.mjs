@@ -1,12 +1,15 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-export const credentialPath=process.env.RTG_SERVICE_ACCOUNT_PATH||(fs.existsSync('.env.local')?fs.readFileSync('.env.local','utf8').split('\n').find(line=>line.startsWith('RTG_SERVICE_ACCOUNT_PATH='))?.slice('RTG_SERVICE_ACCOUNT_PATH='.length):undefined);
+import {parseEnv} from 'node:util';
+const localEnv=fs.existsSync('.env.local')?parseEnv(fs.readFileSync('.env.local','utf8')):{};
+export const credentialPath=process.env.RTG_SERVICE_ACCOUNT_PATH||localEnv.RTG_SERVICE_ACCOUNT_PATH;
 export function readCredential(path=credentialPath,env=process.env){
  const issue=(code,message)=>Object.assign(new Error(message),{code});
- if(env.VERCEL&&!env.RTG_SERVICE_ACCOUNT_JSON)throw issue('MISSING_SERVICE_ACCOUNT','Thiếu RTG_SERVICE_ACCOUNT_JSON trên Vercel. Thêm biến cho Production rồi Redeploy.');
- if(!env.RTG_SERVICE_ACCOUNT_JSON&&!path)throw issue('MISSING_SERVICE_ACCOUNT','Chưa cấu hình service account cho API tổng kết.');
+ const json=env.RTG_SERVICE_ACCOUNT_JSON||(!env.VERCEL&&env===process.env?localEnv.RTG_SERVICE_ACCOUNT_JSON:undefined);
+ if(env.VERCEL&&!json)throw issue('MISSING_SERVICE_ACCOUNT','Thiếu RTG_SERVICE_ACCOUNT_JSON trên Vercel. Thêm biến cho Production rồi Redeploy.');
+ if(!json&&!path)throw issue('MISSING_SERVICE_ACCOUNT','Chưa cấu hình service account cho API tổng kết.');
  let credential;
- try{credential=JSON.parse(env.RTG_SERVICE_ACCOUNT_JSON||fs.readFileSync(path,'utf8'))}catch{throw issue('INVALID_SERVICE_ACCOUNT','RTG_SERVICE_ACCOUNT_JSON không phải JSON hợp lệ. Dán toàn bộ nội dung file service account rồi Redeploy.');}
+ try{credential=JSON.parse(json||fs.readFileSync(path,'utf8'))}catch{throw issue('INVALID_SERVICE_ACCOUNT','RTG_SERVICE_ACCOUNT_JSON không phải JSON hợp lệ. Dán toàn bộ nội dung file service account rồi Redeploy.');}
  if(!credential.project_id||!credential.client_email||!credential.private_key)throw issue('INVALID_SERVICE_ACCOUNT','Service account thiếu project_id, client_email hoặc private_key. Cần toàn bộ nội dung file JSON.');
  return credential;
 }
