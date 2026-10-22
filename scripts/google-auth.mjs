@@ -5,8 +5,14 @@ const localEnv=fs.existsSync('.env.local')?parseEnv(fs.readFileSync('.env.local'
 export const credentialPath=process.env.RTG_SERVICE_ACCOUNT_PATH||localEnv.RTG_SERVICE_ACCOUNT_PATH;
 export function readCredential(path=credentialPath,env=process.env){
  const issue=(code,message)=>Object.assign(new Error(message),{code});
- const json=env.RTG_SERVICE_ACCOUNT_JSON||(!env.VERCEL&&env===process.env?localEnv.RTG_SERVICE_ACCOUNT_JSON:undefined);
- if(env.VERCEL&&!json)throw issue('MISSING_SERVICE_ACCOUNT','Thiếu RTG_SERVICE_ACCOUNT_JSON trên Vercel. Thêm biến cho Production rồi Redeploy.');
+ const settings=!env.VERCEL&&env===process.env?{...localEnv,...env}:env;
+ const splitKeys=['RTG_FIREBASE_PROJECT_ID','RTG_FIREBASE_CLIENT_EMAIL','RTG_FIREBASE_PRIVATE_KEY'];
+ if(splitKeys.some(key=>settings[key])){
+  if(!splitKeys.every(key=>settings[key]?.trim()))throw issue('INVALID_SERVICE_ACCOUNT','Cần đủ RTG_FIREBASE_PROJECT_ID, RTG_FIREBASE_CLIENT_EMAIL và RTG_FIREBASE_PRIVATE_KEY.');
+  return {project_id:settings.RTG_FIREBASE_PROJECT_ID.trim(),client_email:settings.RTG_FIREBASE_CLIENT_EMAIL.trim(),private_key:settings.RTG_FIREBASE_PRIVATE_KEY.replace(/\\n/g,'\n').trim()};
+ }
+ const json=settings.RTG_SERVICE_ACCOUNT_JSON;
+ if(env.VERCEL&&!json)throw issue('MISSING_SERVICE_ACCOUNT','Thiếu RTG_FIREBASE_PROJECT_ID, RTG_FIREBASE_CLIENT_EMAIL và RTG_FIREBASE_PRIVATE_KEY trên Vercel. Thêm biến cho Production rồi Redeploy.');
  if(!json&&!path)throw issue('MISSING_SERVICE_ACCOUNT','Chưa cấu hình service account cho API tổng kết.');
  let credential;
  try{credential=JSON.parse(json||fs.readFileSync(path,'utf8'))}catch{throw issue('INVALID_SERVICE_ACCOUNT','RTG_SERVICE_ACCOUNT_JSON không phải JSON hợp lệ. Dán toàn bộ nội dung file service account rồi Redeploy.');}

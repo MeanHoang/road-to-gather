@@ -70,6 +70,14 @@ Mở `/tong-ket` để xem thống kê, danh sách câu trả lời và xuất C
 
 Firebase Web config công khai có sẵn trong `src/firebase-config.js`, nên clone/build vẫn gửi được lên đúng project. Có thể ghi đè bằng bốn biến `VITE_FIREBASE_*` trong `.env.example`; thay đổi biến cần redeploy.
 
-Để `/tong-ket` đọc dữ liệu trên Vercel: vào Project → Settings → Environment Variables, tạo **`RTG_SERVICE_ACCOUNT_JSON`** với Value là toàn bộ nội dung JSON service account, chọn Production rồi redeploy. Đây là biến server-only, tuyệt đối không thêm tiền tố `VITE_` và không commit file JSON. Đường dẫn local `RTG_SERVICE_ACCOUNT_PATH` không tồn tại trên Vercel.
+Để `/tong-ket` đọc dữ liệu trên Vercel: vào Project → Settings → Environment Variables, thêm ba biến bên dưới, chọn Production rồi redeploy. Giá trị lấy từ service account hoặc `.env.local` đã tách sẵn:
+
+| Biến | Trường trong service account |
+| --- | --- |
+| `RTG_FIREBASE_PROJECT_ID` | `project_id` |
+| `RTG_FIREBASE_CLIENT_EMAIL` | `client_email` |
+| `RTG_FIREBASE_PRIVATE_KEY` | `private_key`, giữ cả BEGIN/END PRIVATE KEY |
+
+Private key hỗ trợ xuống dòng thật hoặc chuỗi `\n`. Khi điền trên Vercel chỉ dán giá trị, không kèm dấu nháy bao ngoài. Đây là biến server-only, tuyệt đối không thêm tiền tố `VITE_`. Cấu hình JSON cũ `RTG_SERVICE_ACCOUNT_JSON` vẫn được hỗ trợ; khi dùng ba biến mới có thể xóa biến JSON cũ. Đường dẫn local `RTG_SERVICE_ACCOUNT_PATH` không tồn tại trên Vercel.
 
 `vercel.json` phục vụ route `/tong-ket` qua ứng dụng React; `/api/owner-results` chạy Vercel Function riêng. Trang tổng kết không yêu cầu đăng nhập theo lựa chọn của chủ nhóm.
