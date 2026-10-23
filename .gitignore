@@ -10,3 +10,4 @@ test-results/
 *service-account*.json
 
 .vercel/
+vercel-production.env
